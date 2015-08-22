@@ -1,9 +1,11 @@
 // DAZ Studio version 4.8.0.59 filetype DAZ Script
 
-var g_IconFolder = App.getContentMgr().getAbsolutePath( "Scripts/Esemwy/HairBlending" , true );
+var info = DzFileInfo(getScriptFileName());
+var g_IconFolder = "%1/%2".arg(info.path()).arg("HairBlending");
 var programName         = "OOTHairBlender";
 var versionName         = "v1";
 
+print(g_IconFolder);
 // Get the image manager
 var oImageMgr = App.getImageMgr();
 
@@ -128,6 +130,11 @@ function blend(texture, base, top, mask)
     var sTopLayerPath =  String("%1/%2").arg( sTexturePath ).arg( top  ); // 01OOTHair
     var sBaseLayerPath = String("%1/%2").arg( sTexturePath ).arg( base ); // 01OOTHair
     var sMaskLayerPath = String("%1/%2").arg(   sMaskPath  ).arg( mask ); // 06OOTHairAlpha
+    // var oTopSize = Image(sTopLayerPath).size;
+    // var oBaseSize = Image(sBaseLayerPath).size;
+    // var oMaskSize = Image(sMaskLayerPath).size;
+    // var nMaskScale = oBaseSize.width / oMaskSize.width;
+    // var nTopScale = oTopSize.width / oMaskSize.width;
 
     // Create file info objects for easy path operations
     var oTopLayerFile  = new DzFileInfo( sTopLayerPath );
@@ -151,7 +158,7 @@ function blend(texture, base, top, mask)
             var oLayer = oLayeredTexture.createLayer( sTopLayerName );
             // Set the absolute path of the image for the layer
             oLayer.imageFile = sTopLayerPath; 
-    
+
             // If the mask layer file exists
             if( oMaskLayerFile ){
                 // Create a new mask
@@ -161,7 +168,6 @@ function blend(texture, base, top, mask)
                 oMask.xScale = 1.5;
                 oMask.yScale = 1.5;
             }
-    
         }
 
     // If the version is older than 4.6.2.23
@@ -202,7 +208,6 @@ function blend(texture, base, top, mask)
                 // Set the layer mask
                 oImageLayer.setMask( oImageMask );
             }
-
         }
 
         // Convert the layered image into a layered texture
