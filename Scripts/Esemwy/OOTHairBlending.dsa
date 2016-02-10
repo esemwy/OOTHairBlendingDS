@@ -122,12 +122,14 @@ function main() {
 
     var wVbgBase = new DzVButtonGroup( gbBase );
     wVbgBase.columns = 10;
+    wVbgBase.title = "Base";
 
     var gbMaterial = new DzVGroupBox( gb );
     gbMaterial.columns = 1;
 
     var wVbgLayer = new DzVButtonGroup( gbMaterial );
     wVbgLayer.columns = 10;
+    wVbgLayer.title = "Layer";
 
     var oMatDir = DzDir(g_IconFolder);
     var aLayerFiles = oMatDir.entryList("*.hair.jpg");
@@ -151,6 +153,8 @@ function main() {
 
     var wVbgMask  = new DzVButtonGroup( gbMaterial );
     wVbgMask.columns = 10;
+    wVbgMask.title = "Mask";
+
     var aMaskFiles = oMatDir.entryList("*.alpha.jpg");
     var nFiles = aMaskFiles.length;
     for (var i=0; i < nFiles; i++) {
@@ -176,7 +180,7 @@ function main() {
     wDlg.setRejectButton( wCancelBtn );
 
     wDlg.width = 950;
-    wDlg.height = 900;
+    wDlg.height = 975;
     var r = wDlg.exec();
     if (r) {
         sTopImageName = "%1OOTHair.jpg".arg( aLayerFiles[getSetting("Layer", 0)].substr(0,2) );
