@@ -6,3 +6,5 @@ HairBlending works on any hair with a vertically oriented UV and straight strips
 materials in the Surfaces tab that you wish to blend, then launch the script. Choose, from top to bottom,
 a "Base", a "Layer", and a "Mask", then *Do It*. HairBlending will use the L.I.E. to create your hair texture.
 The script, and OOT Hair Blending in general, should be renderer agnostic as it only edits the diffuse channel.
+
+NOTE: Outoftouch has graciously allowed me to release icon versions of the hair textures used for hairblending.
