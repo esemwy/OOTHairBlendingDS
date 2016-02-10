@@ -1,135 +1,57 @@
 // DAZ Studio version 4.8.0.59 filetype DAZ Script
 
-var info = DzFileInfo(getScriptFileName());
-var g_IconFolder = "%1/%2".arg(info.path()).arg("HairBlending");
-var programName         = "OOTHairBlender";
-var versionName         = "v1";
+var g_info = DzFileInfo(getScriptFileName());
+var g_IconFolder = App.getContentMgr().getAbsolutePath( "Runtime/Textures/Esemwy/HairBlending", true);
+var g_programName         = "OOTHairBlender";
+var g_versionName         = "v2";
 
-print(g_IconFolder);
-// Get the image manager
-var oImageMgr = App.getImageMgr();
+var g_sBasePath = "Runtime/Textures/outoftouch/!hair";
+var g_sAbsolutePath = App.getContentMgr().getAbsolutePath( g_sBasePath , true );
+var g_sTexturePath = "%1/OOTHairTextures".arg( g_sAbsolutePath );
+var g_sMaskPath = "%1/OOTHairAlpha".arg( g_sAbsolutePath );
 
-var sBasePath = "Runtime/Textures/outoftouch/!hair";
-var sAbsolutePath = App.getContentMgr().getAbsolutePath( sBasePath , true );
-var sTexturePath = "%1/OOTHairTextures".arg( sAbsolutePath );
-var sMaskPath = "%1/OOTHairAlpha".arg( sAbsolutePath );
-
-var matList =  [
-    'Bangs1',
-    'Bangs2',
-    'Side1',
-    'Side2',
-    'Front1',
-    'Front2',
-    'Back',
-    'BackHighlights'
-];
-var sBaseImageName;
-
-var bSomeSelected = false;
-var oNode = Scene.getPrimarySelection();
-do {
-    if ( ! oNode ) break;
-    var oObj = oNode.getObject();
-    if ( ! oObj ) break;
-    var nShapes = oObj.getNumShapes();
-    for (var i = 0; i < nShapes; i++) {
-        oShape = oObj.getShape(i);
-        if (! oShape ) continue;
-        var nMats = oShape.getNumMaterials();
-        for (var j = 0; j < nMats; j++) {
-            var oMat = oShape.getMaterial(j);
-            if ( ! oMat ) continue;
-            // if ( ! oMat.isSelected() ) || ( matList.indexOf(oMat.name) == -1 ) ) continue;
-            if ( ! oMat.isSelected() )  continue;
-            var oTexture = oMat.getColorMap();
-            if (oTexture) {
-                if ( ! bSomeSelected ) {
-                    // Get a unique name for the image
-                    var sTextureName = oImageMgr.getUniqueImageName( "OOT Hair Blending" );
-                    // Create a layered texture
-                    var oLayeredTexture = oImageMgr.createLayeredTexture( sTextureName );
-                    bSomeSelected = true;
-                }
-                // Assign the texture to an owner so we don't cause a memory leak if something goes awry
-                sBaseImageName = DzFileInfo( oTexture.getFilename() ).baseName()+".jpg";
-                oMat.setColorMap( oLayeredTexture );
+function getMaterialObject() {
+    var DSVersion = new Number( App.versionString );
+    var nNodes = Scene.getNumNodes();
+    for (var i=0; i < nNodes; i++) {
+        var oNode = Scene.getNode(i)
+        if (DSVersion >= 4.8) {
+            if (oNode.inherits("DzBone")) {
+                oNode = oNode.getSkeleton();
             }
         }
+        var oObj = oNode.getObject();
+        if (! oObj) continue;
+        var oShape = oObj.getCurrentShape();
+        if (! oShape) continue;
+        var oMat = oShape.getMaterial(0);
+        if (oMat) return oMat;
     }
-    if (! bSomeSelected) break;
+}
 
-    //set dialog
-    var wDlg = new DzDialog;
-    wDlg.caption = programName + " " + versionName;
-
-    var gb = new DzVGroupBox( wDlg );
-
-    var gbMaterial = new DzVGroupBox( gb );
-    gbMaterial.columns = 1;
-
-    var wVbgLayer = new DzVButtonGroup( gbMaterial );
-    wVbgLayer.columns = 10;
-
-    var oMatDir = DzDir(g_IconFolder);
-    var aLayerFiles = oMatDir.entryList("*.hair.jpg");
-    var nFiles = aLayerFiles.length;
-    for (var i=0; i < nFiles; i++) {
-        var sFilename = String("%1/%2").arg( g_IconFolder ).arg( aLayerFiles[i] );
-        var button = new DzRadioButton( wVbgLayer );
-        button.pixmap = new Pixmap( sFilename );
+function editTexture(texture) {
+    var oMat = getMaterialObject();
+    if( !oMat ) return;
+    var nMaterials = oMat.getNumMaterials();
+	var oMaterial;
+	var oTexture;
+    for( var i = 0; i < nMaterials; i++ ) {
+        oMaterial = oMat.getMaterial( i );
+        if (!oMaterial) continue;
+        if (!oMaterial.isSelected()) continue;
+        oTexture = oMaterial.getColorMap();
+        if (!oTexture) continue;
+        oMaterial.setColorMap(texture);
     }
-    var sTopImageName;
-    connect(wVbgLayer, "clicked(int)", function (i) {
-        sTopImageName = "%1OOTHair.jpg".arg( aLayerFiles[i].substr(0,2) )
-    });
+}
 
-    var wVbgMask  = new DzVButtonGroup( gbMaterial );
-    wVbgMask.columns = 10;
-    var aMaskFiles = oMatDir.entryList("*.alpha.jpg");
-    var nFiles = aMaskFiles.length;
-    for (var i=0; i < nFiles; i++) {
-        var sFilename = String("%1/%2").arg( g_IconFolder ).arg( aMaskFiles[i] );
-        var button = new DzRadioButton( wVbgMask );
-        button.pixmap = new Pixmap( sFilename );
-    }
-    var sMaskImageName;
-    connect(wVbgMask, "clicked(int)", function (i) {
-        sMaskImageName = "%1OOTHairAlpha.jpg".arg( aMaskFiles[i].substr(0,2) )
-    });
-
-    var wDlgBtnsGB = new DzVGroupBox(gb);
-    wDlgBtnsGB.columns = 2;
-    
-    var wAcceptBtn = new DzPushButton( wDlgBtnsGB );
-    wAcceptBtn.text = "Do it";
-    wDlg.setAcceptButton( wAcceptBtn );
-
-    var wCancelBtn = new DzPushButton( wDlgBtnsGB );
-    wCancelBtn.text = "&Exit";
-    wDlg.setRejectButton( wCancelBtn );
-
-    wDlg.width = 950;
-    wDlg.height = 600;
-    var r = wDlg.exec();
-    if (!r) break;
-
-    print("Blending "+ sBaseImageName+", "+sTopImageName+", "+sMaskImageName);
-    // Set the dimensions of the texture
-    oLayeredTexture.size = new Size( 3000, 3000 );
-    blend(oLayeredTexture, sBaseImageName, sTopImageName, sMaskImageName);
-
-} while (false);
-
-function blend(texture, base, top, mask)
+function hairBlending(base, top, mask)
 {
-    var oLayeredTexture = texture;
-
     // Define the absolute path of the layer images
-    
-    var sTopLayerPath =  String("%1/%2").arg( sTexturePath ).arg( top  ); // 01OOTHair
-    var sBaseLayerPath = String("%1/%2").arg( sTexturePath ).arg( base ); // 01OOTHair
-    var sMaskLayerPath = String("%1/%2").arg(   sMaskPath  ).arg( mask ); // 06OOTHairAlpha
+    var sTopLayerPath =  String("%1/%2").arg( g_sTexturePath ).arg( top  ); // 01OOTHair
+    var sBaseLayerPath = String("%1/%2").arg( g_sTexturePath ).arg( base ); // 01OOTHair
+    var sMaskLayerPath = String("%1/%2").arg(   g_sMaskPath  ).arg( mask ); // 06OOTHairAlpha
+
     // var oTopSize = Image(sTopLayerPath).size;
     // var oBaseSize = Image(sBaseLayerPath).size;
     // var oMaskSize = Image(sMaskLayerPath).size;
@@ -146,76 +68,122 @@ function blend(texture, base, top, mask)
     var sBaseLayerName = oBaseLayerFile.baseName();
     var sMaskLayerName = String("%1 Mask").arg( oMaskLayerFile.baseName() );
 
-    // If the version is 4.6.2.23 or newer
-    if( App.version64 >= 1125925676777495 ){
-        // If the base layer file exists
-        if( oBaseLayerFile.exists() ){
-            // Add top layer
-            var oBaseLayer = oLayeredTexture.createLayer( sBaseLayerName );
-            oBaseLayer.imageFile = sBaseLayerPath; 
 
-            // Create a new layer
-            var oLayer = oLayeredTexture.createLayer( sTopLayerName );
-            // Set the absolute path of the image for the layer
-            oLayer.imageFile = sTopLayerPath; 
-
-            // If the mask layer file exists
-            if( oMaskLayerFile ){
-                // Create a new mask
-                var oMask = oLayer.createMask( sMaskLayerName );
-                // Set the absolute path of the image for the mask
-                oMask.imageFile = sMaskLayerPath;
-                oMask.xScale = 1.5;
-                oMask.yScale = 1.5;
-            }
-        }
-
-    // If the version is older than 4.6.2.23
-    } else {
-        // Create a layered image
-        var oLayeredImage = new DzLayeredImage();
-
-        // If the base layer file exists
-        if( oBaseLayerFile.exists() ){
-            // Add top layer
-            var oBaseImageLayer = new DzImageFileLayer();
-
-            // Set the absolute path of the image for the layer
-            oBaseImageLayer.filename = sBaseLayerPath;
-            // Set the label for the layer
-            oBaseImageLayer.label = sBaseLayerName;
-            // Add the layer
-            oBaseLayeredImage.addLayer( oImageLayer );
-
-            // Create a new layer
-            var oImageLayer = new DzImageFileLayer();
-            // Set the absolute path of the image for the layer
-            oImageLayer.filename = sTopLayerPath;
-            // Set the label for the layer
-            oImageLayer.label = sTopLayerName;
-            // Add the layer
-            oLayeredImage.addLayer( oImageLayer );
-    
-            // If the mask layer file exists
-            if( oMaskLayerFile ){
-                // Create a new mask
-                var oImageMask = new DzImageMask();
-                // Set the absolute path of the image for the mask
-                oImageMask.filename = sMaskLayerPath;
-                // Set the label for the mask
-                oImageMask.label = sMaskLayerName;
-                oMask.addManipulator(DzScaleManip(1.5, 1.5));
-                // Set the layer mask
-                oImageLayer.setMask( oImageMask );
-            }
-        }
-
-        // Convert the layered image into a layered texture
-        oLayeredImage.toLayeredTexture( oLayeredTexture );
+    if ( oBaseLayerFile.exists() && oTopLayerFile.exists() && oMaskLayerFile.exists() ) {
+	    var oImageMgr = App.getImageMgr();
+	    var textureName = oImageMgr.getUniqueImageName("OOT Hair Blending");
+	    var oNewLayeredTexture = oImageMgr.createLayeredTexture(textureName);
+	    oNewLayeredTexture.size = Size(3000,3000);
+        var oLayer0 = oNewLayeredTexture.createLayer( sBaseLayerName );
+        var oLayer1 = oNewLayeredTexture.createLayer( sTopLayerName );
+        var oMask = oLayer1.createMask( sMaskLayerName );
+        
+        // Set the absolute path of the image for the layer
+        oLayer0.imageFile = sBaseLayerPath; 
+        oLayer1.imageFile = sTopLayerPath; 
+        oMask.imageFile = sMaskLayerPath;
+        oMask.xScale = 1.5;
+        oMask.yScale = 1.5;
+        editTexture(oNewLayeredTexture);
     }
 }
 
-function dumpBehavior(obj) {
-  var properties = new RegExp("([a-zA-Z0-9]+(\\(.*?\\))?),", "g");
-  print(Object.getOwnPropertyNames(obj).sort().toString().replace(properties, "$1\n"));
+function saveSetting( key, keyVal )
+{
+    DzAppSettings(g_programName).setStringValue( key, keyVal );
 }
+
+function getSetting( key, defVal )
+{
+    return DzAppSettings(g_programName).getStringValue( key, defVal );
+}
+
+function dumpBehavior(obj) {
+    var aPropertyNames = Object.getOwnPropertyNames(obj).sort();
+    for (var i = 0; i < aPropertyNames.length; i++) {
+        print(obj.className()+"::"+aPropertyNames[i].toString());
+    }
+}
+
+
+function main() {
+    var sBaseImageName;
+    var sTopImageName;
+    var sMaskImageName;
+
+    //set dialog
+    var wDlg = new DzDialog;
+    wDlg.caption = g_programName + " " + g_versionName;
+
+    var gb = new DzVGroupBox( wDlg );
+
+    var gbBase = new DzVGroupBox( gb );
+    gbBase.columns = 1;
+
+    var wVbgBase = new DzVButtonGroup( gbBase );
+    wVbgBase.columns = 10;
+
+    var gbMaterial = new DzVGroupBox( gb );
+    gbMaterial.columns = 1;
+
+    var wVbgLayer = new DzVButtonGroup( gbMaterial );
+    wVbgLayer.columns = 10;
+
+    var oMatDir = DzDir(g_IconFolder);
+    var aLayerFiles = oMatDir.entryList("*.hair.jpg");
+    var nFiles = aLayerFiles.length;
+    for (var i=0; i < nFiles; i++) {
+        var sFilename = String("%1/%2").arg( g_IconFolder ).arg( aLayerFiles[i] );
+        var button1 = new DzRadioButton( wVbgLayer );
+        button1.pixmap = new Pixmap( sFilename );
+        var button2 = new DzRadioButton( wVbgBase );
+        button2.pixmap = new Pixmap( sFilename );
+    }
+    wVbgBase.selected = getSetting("Base", 0);
+    wVbgLayer.selected = getSetting("Layer", 0);
+ 
+    connect(wVbgLayer, "clicked(int)", function (i) {
+        saveSetting("Layer", i);
+    });
+    connect(wVbgBase, "clicked(int)", function (i) {
+        saveSetting("Base", i);
+    });
+
+    var wVbgMask  = new DzVButtonGroup( gbMaterial );
+    wVbgMask.columns = 10;
+    var aMaskFiles = oMatDir.entryList("*.alpha.jpg");
+    var nFiles = aMaskFiles.length;
+    for (var i=0; i < nFiles; i++) {
+        var sFilename = String("%1/%2").arg( g_IconFolder ).arg( aMaskFiles[i] );
+        var button = new DzRadioButton( wVbgMask );
+        button.pixmap = new Pixmap( sFilename );
+    }
+	wVbgMask.selected = getSetting("Mask", 0);
+
+    connect(wVbgMask, "clicked(int)", function (i) {
+        saveSetting("Mask", i);
+    });
+
+    var wDlgBtnsGB = new DzVGroupBox(gb);
+    wDlgBtnsGB.columns = 2;
+
+    var wAcceptBtn = new DzPushButton( wDlgBtnsGB );
+    wAcceptBtn.text = qsTr("Do it");
+    wDlg.setAcceptButton( wAcceptBtn );
+
+    var wCancelBtn = new DzPushButton( wDlgBtnsGB );
+    wCancelBtn.text = qsTr("Exit");
+    wDlg.setRejectButton( wCancelBtn );
+
+    wDlg.width = 950;
+    wDlg.height = 900;
+    var r = wDlg.exec();
+    if (r) {
+        sTopImageName = "%1OOTHair.jpg".arg( aLayerFiles[getSetting("Layer", 0)].substr(0,2) );
+    	sBaseImageName = "%1OOTHair.jpg".arg( aLayerFiles[getSetting("Base", 0)].substr(0,2) );
+        sMaskImageName = "%1OOTHairAlpha.jpg".arg( aMaskFiles[getSetting("Mask", 0)].substr(0,2) );
+		hairBlending(sBaseImageName, sTopImageName, sMaskImageName);
+	}
+}
+
+main();
