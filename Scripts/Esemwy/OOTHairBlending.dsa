@@ -116,19 +116,25 @@ function main() {
     wDlg.caption = g_programName + " " + g_versionName;
 
     var gb = new DzVGroupBox( wDlg );
-
-    var gbBase = new DzVGroupBox( gb );
+    gb.columns = 2;
+    gb.setFixedWidth(825);
+    
+    var saBase = DzScrollArea ( gb );
+    saBase.setHorizontalScrollbarDisplay( false );
+    saBase.hideFrame();
+    var gbBase = DzVGroupBox( gb );
     gbBase.columns = 1;
-
     var wVbgBase = new DzVButtonGroup( gbBase );
-    wVbgBase.columns = 10;
+    wVbgBase.columns = 4;
     wVbgBase.title = "Base";
 
-    var gbMaterial = new DzVGroupBox( gb );
-    gbMaterial.columns = 1;
-
-    var wVbgLayer = new DzVButtonGroup( gbMaterial );
-    wVbgLayer.columns = 10;
+    var saLayer = DzScrollArea ( gb   );
+    saLayer.setHorizontalScrollbarDisplay( false );
+    saLayer.hideFrame();
+    var gbLayer = DzVGroupBox( gb );
+    saLayer.hideFrame();
+    var wVbgLayer = new DzVButtonGroup( gbLayer );
+    wVbgLayer.columns = 4;
     wVbgLayer.title = "Layer";
 
     var oMatDir = DzDir(g_IconFolder);
@@ -141,6 +147,8 @@ function main() {
         var button2 = new DzRadioButton( wVbgBase );
         button2.pixmap = new Pixmap( sFilename );
     }
+    saBase.setWidget(gbBase);
+    saLayer.setWidget(gbLayer);
     wVbgBase.selected = getSetting("Base", 0);
     wVbgLayer.selected = getSetting("Layer", 0);
  
@@ -151,8 +159,12 @@ function main() {
         saveSetting("Base", i);
     });
 
-    var wVbgMask  = new DzVButtonGroup( gbMaterial );
-    wVbgMask.columns = 10;
+    var saMask = DzScrollArea ( gb   );
+    var gbMask = DzVGroupBox( gb );
+    saLayer.setHorizontalScrollbarDisplay( false );
+    saLayer.hideFrame();
+    var wVbgMask  = new DzVButtonGroup( gbMask );
+    wVbgMask.columns = 4;
     wVbgMask.title = "Mask";
 
     var aMaskFiles = oMatDir.entryList("*.alpha.jpg");
@@ -162,6 +174,7 @@ function main() {
         var button = new DzRadioButton( wVbgMask );
         button.pixmap = new Pixmap( sFilename );
     }
+    saMask.setWidget(gbMask);
 	wVbgMask.selected = getSetting("Mask", 0);
 
     connect(wVbgMask, "clicked(int)", function (i) {
@@ -179,8 +192,8 @@ function main() {
     wCancelBtn.text = qsTr("Exit");
     wDlg.setRejectButton( wCancelBtn );
 
-    wDlg.width = 950;
-    wDlg.height = 975;
+    wDlg.width = 840;
+    wDlg.height = 550;
     var r = wDlg.exec();
     if (r) {
         sTopImageName = "%1OOTHair.jpg".arg( aLayerFiles[getSetting("Layer", 0)].substr(0,2) );
