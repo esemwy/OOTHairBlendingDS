@@ -8,7 +8,7 @@ var g_programName         = "OOTHairBlender";
 var g_versionName         = "v2";
 
 var g_sBasePath = "Runtime/Textures/outoftouch/!hair";
-var g_sTexturePath = oContentMgr.getAbsolutePath( "%1/OOTHairTextures".arg( g_sBasePath ), true ) );
+var g_sTexturePath = oContentMgr.getAbsolutePath( "%1/OOTHairTextures".arg( g_sBasePath ), true );
 var g_sMaskPath = oContentMgr.getAbsolutePath( "%1/OOTHairAlpha".arg( g_sBasePath ), true );
 
 function perror(e) {
