@@ -1,26 +1,21 @@
 // DAZ Studio version 4.8.0.59 filetype DAZ Script
 
 var g_info = DzFileInfo(getScriptFileName());
-var g_IconFolder = App.getContentMgr().getAbsolutePath( "Runtime/Textures/Esemwy/HairBlending", true);
+var oContentMgr = App.getContentMgr();
+
+var g_IconFolder = oContentMgr.getAbsolutePath( "Runtime/Textures/Esemwy/HairBlending", true);
 var g_programName         = "OOTHairBlender";
 var g_versionName         = "v2";
 
 var g_sBasePath = "Runtime/Textures/outoftouch/!hair";
-var g_sAbsolutePath = App.getContentMgr().getAbsolutePath( g_sBasePath , true );
-var g_sTexturePath = "%1/OOTHairTextures".arg( g_sAbsolutePath );
-var g_sMaskPath = "%1/OOTHairAlpha".arg( g_sAbsolutePath );
+var g_sTexturePath = oContentMgr.getAbsolutePath( "%1/OOTHairTextures".arg( g_sBasePath ), true ) );
+var g_sMaskPath = oContentMgr.getAbsolutePath( "%1/OOTHairAlpha".arg( g_sBasePath ), true );
 
 function perror(e) {
 	print("%1: %2".arg(g_programName).arg(e));
 }
 
 function texturesVerified() {
-	if ( !DzFileInfo(g_sAbsolutePath).exists() ) {
-		perror("%1 does not exist.".arg(g_sBasePath));
-		MessageBox.critical( String("Texture base directory does not exist."), "Directory Error", "&OK" );
-		return false;
-	}
-	
 	if ( !DzFileInfo(g_sTexturePath).exists() ) {
 		perror("'OOTHairTextures' does not exist.");
 		MessageBox.critical( String("Texture directory does not exist."), "Directory Error", "&OK" );
