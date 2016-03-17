@@ -3,7 +3,8 @@
 var g_info = DzFileInfo(getScriptFileName());
 var oContentMgr = App.getContentMgr();
 
-var g_IconFolder = oContentMgr.getAbsolutePath( "Runtime/Textures/Esemwy/HairBlending", true);
+var g_HairIconFolder = oContentMgr.getAbsolutePath( "Runtime/Textures/Esemwy/HairBlending/hair", true);
+var g_AlphaIconFolder = oContentMgr.getAbsolutePath( "Runtime/Textures/Esemwy/HairBlending/alpha", true);
 var g_programName         = "OOTHairBlender";
 var g_versionName         = "v2";
 
@@ -191,11 +192,11 @@ function main() {
     wVbgLayer.columns = 4;
     wVbgLayer.title = "Layer";
 
-    var oMatDir = DzDir(g_IconFolder);
-    var aTextureFiles = oMatDir.entryList("*.hair.jpg");
+    var oMatDir = DzDir(g_HairIconFolder);
+    var aTextureFiles = oMatDir.getFilesFromDir(Array("*.jpg"), true);
     var nTextureFiles = aTextureFiles.length;
     for (var i=0; i < nTextureFiles; i++) {
-        var sFilename = String("%1/%2").arg( g_IconFolder ).arg( aTextureFiles[i] );
+        var sFilename = aTextureFiles[i];
         var button1 = new DzRadioButton( wVbgLayer );
         button1.pixmap = new Pixmap( sFilename );
         var button2 = new DzRadioButton( wVbgBase );
@@ -221,10 +222,11 @@ function main() {
     wVbgMask.columns = 4;
     wVbgMask.title = "Mask";
 
-    var aMaskFiles = oMatDir.entryList("*.alpha.jpg");
+    oMatDir = DzDir(g_AlphaIconFolder);
+    var aMaskFiles = oMatDir.getFilesFromDir(Array("*.jpg"), true);
     var nMaskFiles = aMaskFiles.length;
     for (var i=0; i < nMaskFiles; i++) {
-        var sFilename = String("%1/%2").arg( g_IconFolder ).arg( aMaskFiles[i] );
+        var sFilename = aMaskFiles[i];
         var button = new DzRadioButton( wVbgMask );
         button.pixmap = new Pixmap( sFilename );
     }
