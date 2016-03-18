@@ -13,36 +13,43 @@ var g_sTexturePath = oContentMgr.getAbsolutePath( "%1/OOTHairTextures".arg( g_sB
 var g_sMaskPath = oContentMgr.getAbsolutePath( "%1/OOTHairAlpha".arg( g_sBasePath ), true );
 
 function perror(e) {
-	print("%1: %2".arg(g_programName).arg(e));
+    print("%1: %2".arg(g_programName).arg(e));
 }
 
 function texturesVerified() {
-	if ( !DzFileInfo(g_sTexturePath).exists() ) {
-		perror("'OOTHairTextures' does not exist.");
-		MessageBox.critical( String("Texture directory does not exist."), "Directory Error", "&OK" );
-		return false;
-	}
-	
-	if ( !DzFileInfo(g_sMaskPath).exists() ) {
-		perror("'OOTHairAlpha' does not exist.");
-		MessageBox.critical( String("Mask directory does not exist."), "Directory Error", "&OK" );
-		return false;
-	}
-	return true;
+    if ( !DzFileInfo(g_sTexturePath).exists() ) {
+        perror("'OOTHairTextures' does not exist.");
+        MessageBox.critical( String("Texture directory does not exist."), "Directory Error", "&OK" );
+        return false;
+    }
+    
+    if ( !DzFileInfo(g_sMaskPath).exists() ) {
+        perror("'OOTHairAlpha' does not exist.");
+        MessageBox.critical( String("Mask directory does not exist."), "Directory Error", "&OK" );
+        return false;
+    }
+    return true;
+}
+
+function trimFileName(basePath, fullPath) {
+    var nStart = basePath.length;
+    if (! basePath.endsWith("/")) nStart += 1;
+    var nEnd = fullPath.length;
+    return fullPath.mid(nStart, nEnd);
 }
 
 function anySelected() {
     var oMat = getMaterialObject();
     if( !oMat ) return false;
     var nMaterials = oMat.getNumMaterials();
-	var oMaterial;
+    var oMaterial;
     for ( var i = 0; i < nMaterials; i++ ) {
         oMaterial = oMat.getMaterial( i );
         if (!oMaterial) continue;
         if (!oMaterial.isSelected()) continue;
         return true;
-	}
-	return false;
+    }
+    return false;
 }
 
 function getMaterialObject() {
@@ -68,9 +75,9 @@ function editTexture(texture) {
     var oMat = getMaterialObject();
     if( !oMat ) return;
     var nMaterials = oMat.getNumMaterials();
-	var oMaterial;
-	var oTexture;
-    for( var i = 0; i < nMaterials; i++ ) {
+    var oMaterial;
+    var oTexture;
+    for ( var i = 0; i < nMaterials; i++ ) {
         oMaterial = oMat.getMaterial( i );
         if (!oMaterial) continue;
         if (!oMaterial.isSelected()) continue;
@@ -83,16 +90,17 @@ function editTexture(texture) {
 function hairBlending(base, layer, mask)
 {
     // Define the absolute path of the layer images
-    var sBasePath = String("%1/%2").arg( g_sTexturePath ).arg( base ); // 01OOTHair
-    var sLayerPath =  String("%1/%2").arg( g_sTexturePath ).arg( layer  ); // 01OOTHair
-    var sMaskPath = String("%1/%2").arg(   g_sMaskPath  ).arg( mask ); // 06OOTHairAlpha
+    var oContentMgr = App.getContentMgr();
+    var sBasePath =  oContentMgr.getAbsolutePath( String("Runtime/Textures/%1").arg(base), true );
+    var sLayerPath =  oContentMgr.getAbsolutePath( String("Runtime/Textures/%1").arg(layer), true );
+    var sMaskPath =  oContentMgr.getAbsolutePath( String("Runtime/Textures/%1").arg(mask), true );
 
-	perror("Blending base: %1, layer: %2, mask %3.".arg(base).arg(layer).arg(mask))
-    // var oTopSize = Image(sLayerPath).size;
-    // var oBaseSize = Image(sBasePath).size;
-    // var oMaskSize = Image(sMaskPath).size;
-    // var nMaskScale = oBaseSize.width / oMaskSize.width;
-    // var nTopScale = oTopSize.width / oMaskSize.width;
+    perror("Blending base: %1, layer: %2, mask: %3.".arg(base).arg(layer).arg(mask))
+    var oBaseSize = Image(sBasePath).size;
+    var oLayerSize = Image(sLayerPath).size;
+    var oMaskSize = Image(sMaskPath).size;
+    var nLayerScale = oBaseSize.width / oLayerSize.width;
+    var nMaskScale = oBaseSize.width / oMaskSize.width;
 
     // Create file info objects for easy path operations
     var oBaseFile = new DzFileInfo( sBasePath );
@@ -106,10 +114,10 @@ function hairBlending(base, layer, mask)
 
 
     if ( oBaseFile.exists() && oLayerFile.exists() && oMaskFile.exists() ) {
-	    var oImageMgr = App.getImageMgr();
-	    var textureName = oImageMgr.getUniqueImageName("OOT Hair Blending");
-	    var oNewLayeredTexture = oImageMgr.createLayeredTexture(textureName);
-	    oNewLayeredTexture.size = Size(3000,3000);
+        var oImageMgr = App.getImageMgr();
+        var textureName = oImageMgr.getUniqueImageName("OOT Hair Blending");
+        var oNewLayeredTexture = oImageMgr.createLayeredTexture(textureName);
+        oNewLayeredTexture.size = oBaseSize;
         var oLayer0 = oNewLayeredTexture.createLayer( sBaseName );
         var oLayer1 = oNewLayeredTexture.createLayer( sLayerName );
         var oMask = oLayer1.createMask( sMaskName );
@@ -117,9 +125,12 @@ function hairBlending(base, layer, mask)
         // Set the absolute path of the image for the layer
         oLayer0.imageFile = sBasePath; 
         oLayer1.imageFile = sLayerPath; 
+        oLayer1.xScale = nLayerScale;
+        oLayer1.yScale = nLayerScale;
+        
         oMask.imageFile = sMaskPath;
-        oMask.xScale = 1.5;
-        oMask.yScale = 1.5;
+        oMask.xScale = nMaskScale;
+        oMask.yScale = nMaskScale;
         editTexture(oNewLayeredTexture);
     }
     else {
@@ -158,14 +169,14 @@ function dumpBehavior(obj) {
 
 
 function main() {
-	var oMat = getMaterialObject();
-	if (! anySelected()) {
-		perror("No material zones selected.");
-		MessageBox.critical( String("No Materials selected."), "Execution Error", "&OK" );
-		return;
-	}
-	if (! texturesVerified() ) return false;
-			
+    var oMat = getMaterialObject();
+    if (! anySelected()) {
+        perror("No material zones selected.");
+        MessageBox.critical( String("No Materials selected."), "Execution Error", "&OK" );
+        return;
+    }
+    if (! texturesVerified() ) return false;
+            
     //set dialog
     var wDlg = new DzDialog;
     wDlg.caption = g_programName + " " + g_versionName;
@@ -231,7 +242,7 @@ function main() {
         button.pixmap = new Pixmap( sFilename );
     }
     saMask.setWidget(gbMask);
-	wVbgMask.selected = getSetting("Mask", 0);
+    wVbgMask.selected = getSetting("Mask", 0);
 
     connect(wVbgMask, "clicked(int)", function (i) {
         saveSetting("Mask", i);
@@ -252,11 +263,11 @@ function main() {
     wDlg.height = 550;
     var r = wDlg.exec();
     if (r) {
-    	var sBaseImageName = "%1OOTHair.jpg".arg( aTextureFiles[getSetting("Base", 0)].substr(0,2) );
-        var sLayerImageName = "%1OOTHair.jpg".arg( aTextureFiles[getSetting("Layer", 0)].substr(0,2) );
-        var sMaskImageName = "%1OOTHairAlpha.jpg".arg( aMaskFiles[getSetting("Mask", 0)].substr(0,2) );
-		hairBlending(sBaseImageName, sLayerImageName, sMaskImageName);
-	}
+        var sTrimBase = trimFileName(g_HairIconFolder, aTextureFiles[getSetting("Base", 0)])
+        var sTrimLayer = trimFileName(g_HairIconFolder, aTextureFiles[getSetting("Layer", 0)])
+        var sTrimMask = trimFileName(g_AlphaIconFolder, aMaskFiles[getSetting("Mask", 0)])
+        hairBlending(sTrimBase, sTrimLayer, sTrimMask);
+    }
 }
 
 main();
