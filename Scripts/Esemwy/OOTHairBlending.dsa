@@ -6,7 +6,7 @@ var oContentMgr = App.getContentMgr();
 var g_HairIconFolder = oContentMgr.getAbsolutePath( "Runtime/Textures/Esemwy/HairBlending/hair", true);
 var g_AlphaIconFolder = oContentMgr.getAbsolutePath( "Runtime/Textures/Esemwy/HairBlending/alpha", true);
 var g_programName         = "OOTHairBlender";
-var g_versionName         = "v2";
+var g_versionName         = "v2.1";
 
 var g_sBasePath = "Runtime/Textures/outoftouch/!hair";
 var g_sTexturePath = oContentMgr.getAbsolutePath( "%1/OOTHairTextures".arg( g_sBasePath ), true );
