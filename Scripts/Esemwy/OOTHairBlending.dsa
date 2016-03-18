@@ -8,27 +8,9 @@ var g_AlphaIconFolder = oContentMgr.getAbsolutePath( "Runtime/Textures/Esemwy/Ha
 var g_programName         = "OOTHairBlender";
 var g_versionName         = "v2.1";
 
-var g_sBasePath = "Runtime/Textures/outoftouch/!hair";
-var g_sTexturePath = oContentMgr.getAbsolutePath( "%1/OOTHairTextures".arg( g_sBasePath ), true );
-var g_sMaskPath = oContentMgr.getAbsolutePath( "%1/OOTHairAlpha".arg( g_sBasePath ), true );
 
 function perror(e) {
     print("%1: %2".arg(g_programName).arg(e));
-}
-
-function texturesVerified() {
-    if ( !DzFileInfo(g_sTexturePath).exists() ) {
-        perror("'OOTHairTextures' does not exist.");
-        MessageBox.critical( String("Texture directory does not exist."), "Directory Error", "&OK" );
-        return false;
-    }
-    
-    if ( !DzFileInfo(g_sMaskPath).exists() ) {
-        perror("'OOTHairAlpha' does not exist.");
-        MessageBox.critical( String("Mask directory does not exist."), "Directory Error", "&OK" );
-        return false;
-    }
-    return true;
 }
 
 function trimFileName(basePath, fullPath) {
@@ -175,7 +157,6 @@ function main() {
         MessageBox.critical( String("No Materials selected."), "Execution Error", "&OK" );
         return;
     }
-    if (! texturesVerified() ) return false;
             
     //set dialog
     var wDlg = new DzDialog;
