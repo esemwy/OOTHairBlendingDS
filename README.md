@@ -17,16 +17,16 @@ directories directly parallel Runtime/Textures such that the icon name under *al
 lookup the complete texture name.
 
 *    Example 1:
-        - If the icon is: 
-            - `Runtime/Textures/Esemwy/HairBlending/hair/SWAM_Art/04IrayCol/SW_Iray_Col02_C.jpg`
-        - HairBlending would be performed using:
-            - `Runtime/Textures/SWAM_Art/04IrayCol/SW_Iray_Col02_C.jpg`
+        * If the icon is: 
+            * `Runtime/Textures/Esemwy/HairBlending/hair/SWAM_Art/04IrayCol/SW_Iray_Col02_C.jpg`
+        * HairBlending would be performed using:
+            * `Runtime/Textures/SWAM_Art/04IrayCol/SW_Iray_Col02_C.jpg`
 
 *    Example 2:
-        - If the icon is: 
-            - `Runtime/Textures/Esemwy/HairBlending/alpha/outoftouch/!hair/OOTHairAlpha/01OOTHairAlpha.jpg`
-        - HairBlending would be performed using:
-            - `Runtime/Textures/outoftouch/!hair/OOTHairAlpha/01OOTHairAlpha.jpg`
+        * If the icon is: 
+            * `Runtime/Textures/Esemwy/HairBlending/alpha/outoftouch/!hair/OOTHairAlpha/01OOTHairAlpha.jpg`
+        * HairBlending would be performed using:
+            * `Runtime/Textures/outoftouch/!hair/OOTHairAlpha/01OOTHairAlpha.jpg`
 
 In order to add your own icons, all you have to do is copy your hair textures to the `Runtime/Textures/Esemwy/HairBlending/hair/`
 directory (or the alpha sub-directory if they are masks), while maintaining the same sub-directory structure,
