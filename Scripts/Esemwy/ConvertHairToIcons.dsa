@@ -1,0 +1,136 @@
+// DAZ Studio version 4.9.1.30 filetype DAZ Script
+
+var g_ProgramName = "ConvertHairToIcons";
+var g_VersionName = "1.0";
+var g_AppName = "esemwy_ConvertHairToIcons";
+
+var g_RTLength = String("Runtime/Textures/").length;
+
+
+function addButtonToGB( gb, text, func )
+{
+    var wButton = new DzPushButton( gb );
+    wButton.text = text;
+    connect( wButton, "clicked()", func );
+    return( wButton );
+}
+
+function saveSetting( key, keyVal )
+{
+    DzAppSettings(g_AppName).setStringValue( key, keyVal );
+}
+
+function getSetting( key, defVal )
+{
+    return DzAppSettings(g_AppName).getStringValue( key, defVal );
+}
+
+
+function convertHairToIcons(sHairDirectory, sHairIconFolder) 
+{
+    var oMatDir = DzDir(sHairIconFolder);
+
+    var nPrefixLength =  sHairDirectory.find("Runtime/Textures/",0);
+
+    var oHairIconFolder = DzDir(sHairIconFolder);
+
+    oMatDir = DzDir(sHairDirectory);
+    var aNewTextures = oMatDir.getFilesFromDir(Array("*.jpg"), true);
+    startProgress( "Converting Textures to Icons.", aNewTextures.length, true, true );
+    for (var i=0; i < aNewTextures.length; i++) {
+        var oImageFileInfo = DzFileInfo(aNewTextures[i]);
+        var sImagePath = oImageFileInfo.path();
+        var sSubPath = sImagePath.mid(nPrefixLength+g_RTLength, sImagePath.length);
+        var r = oHairIconFolder.mkpath(sSubPath);
+        var sNewPath = "%1/%2".arg(sHairIconFolder).arg(sSubPath);    
+        var oImage = Image();
+        oImage.load(aNewTextures[i]);
+        var oNewImage = oImage.scale(50,50);
+        var sNewImageName = String("%1/%2.%3").arg(sNewPath).arg(oImageFileInfo.baseName()).arg(oImageFileInfo.extension());
+        oNewImage.save(sNewImageName);
+        stepProgress(1);
+    }
+    finishProgress();
+}
+
+function main()
+{
+    var oContentMgr = App.getContentMgr();
+    var sHairDirectory = oContentMgr.getAbsolutePath( "Runtime/Textures/Esemwy/HairBlending/hair", true);
+    var sAlphaDirectory = oContentMgr.getAbsolutePath( "Runtime/Textures/Esemwy/HairBlending/alpha", true);
+
+    //set dialog
+    var wDlg = new DzDialog;
+    wDlg.caption = g_ProgramName + " " + g_VersionName;
+    
+    var gb = new DzVGroupBox( wDlg );
+    
+    var gbTextureDir = new DzVGroupBox( gb );
+    gbTextureDir.columns = 3;
+    var wLblTxDir = new DzLabel( gbTextureDir );
+    wLblTxDir.text = "Texture Location:";
+    var wEdTxDir = new DzLineEdit( gbTextureDir );
+    wEdTxDir.text = getSetting("TextureDir", "");
+    wEdTxDir.readOnly = true;
+    var wBrowseBtn = addButtonToGB( gbTextureDir, "Browse ...", function() {
+        wEdTxDir.text = FileDialog.doDirectoryDialog( "Select a Hair Texture Directory" );
+    });
+
+
+
+    // Create a button group for the options
+    //var gbTextureDir = new DzVGroupBox( gb );
+
+    var wOptBG = new DzHButtonGroup( gb );
+    wOptBG.columns = 2;
+
+    // Create the options
+    var wOpt1Btn = new DzRadioButton( wOptBG );
+    wOpt1Btn.text = "Hair";
+    wOpt1Btn.checked =true;
+    var wOpt2Btn = new DzRadioButton( wOptBG );
+    wOpt2Btn.text = "Alpha";    
+
+    var gbButtons = new DzVGroupBox( gb );
+    gbButtons.columns = 2;
+    
+    var wOkBtn = addButtonToGB( gbButtons, "OK", function() {
+        if (wEdTxDir.text != "") {
+            saveSetting("TextureDir", wEdTxDir.text);
+            if (wEdTxDir.text.find("Runtime/Textures/",0) == -1) {
+                MessageBox.critical(
+                    String("Texture Directory must be in Runtime/Textures."),
+                    "Bad Directory", 
+                    "&OK" 
+                );
+            }
+            else {
+                if (wOpt1Btn.checked) {
+                    convertHairToIcons(wEdTxDir.text, sHairDirectory) ;
+                }
+                else {
+                    convertHairToIcons(wEdTxDir.text, sAlphaDirectory) ;
+                }
+            }
+        }
+        else {
+            MessageBox.critical(
+                String("You must choose a Texture Directory."),
+                "Not Found", 
+                "&OK" 
+            );
+        }
+    });
+    wDlg.setAcceptButton(wOkBtn);
+
+    var wCancelBtn = new DzPushButton( gbButtons );
+    wCancelBtn.text = "&Cancel";
+    wDlg.setRejectButton( wCancelBtn );
+
+    wDlg.minWidth = 350;
+    wDlg.minHeight = 225;
+
+    wDlg.exec();
+
+}
+main();
