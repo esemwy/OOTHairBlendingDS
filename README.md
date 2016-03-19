@@ -31,3 +31,8 @@ lookup the complete texture name.
 In order to add your own icons, all you have to do is copy your hair textures to the `Runtime/Textures/Esemwy/HairBlending/hair/`
 directory (or the alpha sub-directory if they are masks), while maintaining the same sub-directory structure,
 and resize the images to 50x50 pixels.
+
+## New Update
+Added an icon creator script called `ConvertHairToIcons.dsa` that automates the process of creating icons from texture files. 
+You'll need to clean up after it if you don't want bump, specular, etc maps from polluting your icon list. Just browse to the
+texture directory that you want to HairBlend with, and click "OK". 
