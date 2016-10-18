@@ -52,8 +52,61 @@ function getMaterialObject() {
         if (oMat) return oMat;
     }
 }
+function editTextureLIE(oMaterial, sBasePath, sLayerPath, sMaskPath) {
+    var oBaseFile = new DzFileInfo( sBasePath );
+    var oLayerFile  = new DzFileInfo( sLayerPath );
+    var oMaskFile = new DzFileInfo( sMaskPath );
 
-function editTexture(texture) {
+	var sBaseName = oBaseFile.baseName();
+	var sLayerName  = oLayerFile.baseName();
+	var sMaskName = String("%1 Mask").arg( oMaskFile.baseName() );
+
+    var oBaseSize = Image(sBasePath).size;
+    var oLayerSize = Image(sLayerPath).size;
+    var oMaskSize = Image(sMaskPath).size;
+    var nLayerScale = oBaseSize.width / oLayerSize.width;
+    var nMaskScale = oBaseSize.width / oMaskSize.width;
+	
+	var oImageMgr = App.getImageMgr();
+	var textureName = oImageMgr.getUniqueImageName("OOT Hair Blending");
+	var oNewLayeredTexture = oImageMgr.createLayeredTexture(textureName);
+	oNewLayeredTexture.size = oBaseSize;
+	var oLayer0 = oNewLayeredTexture.createLayer( sBaseName );
+	var oLayer1 = oNewLayeredTexture.createLayer( sLayerName );
+	var oMask = oLayer1.createMask( sMaskName );
+	
+	// Set the absolute path of the image for the layer
+	oLayer0.imageFile = sBasePath; 
+	oLayer1.imageFile = sLayerPath; 
+	oLayer1.xScale = nLayerScale;
+	oLayer1.yScale = nLayerScale;
+	
+	oMask.imageFile = sMaskPath;
+	oMask.xScale = nMaskScale;
+	oMask.yScale = nMaskScale;
+	oMaterial.setColorMap(oNewLayeredTexture);
+}
+
+function editTextureIray(oMaterial, sBasePath, sLayerPath, sMaskPath) {
+	var oOverlayWeight = oMaterial.findProperty('Diffuse Overlay Weight');
+	var oOverlayColor = oMaterial.findProperty('Diffuse Overlay Color');
+	var oOverlayRoughness = oMaterial.findProperty('Diffuse Overlay Roughness');
+	var oDiffuseColor = oMaterial.findProperty('Diffuse Color');
+	var oDiffuseRoughness = oMaterial.findProperty('Diffuse Roughness');
+
+	oOverlayWeight.setValue(1);
+	oOverlayWeight.setMap(sMaskPath);
+	oOverlayColor.setValue(0xFFFFFF);
+	oOverlayColor.setMap(sLayerPath);
+	oDiffuseColor.setMap(sBasePath);
+	var nRoughness = oDiffuseRoughness.getValue();
+	if (nRoughness > 0.0) {
+		oOverlayRoughness.setValue(nRoughness);
+		oOverlayRoughness.setMap(sMaskPath);
+	}
+}
+
+function editTexture( sBasePath, sLayerPath, sMaskPath, bUseShader ) {
     var oMat = getMaterialObject();
     if( !oMat ) return;
     var nMaterials = oMat.getNumMaterials();
@@ -65,11 +118,17 @@ function editTexture(texture) {
         if (!oMaterial.isSelected()) continue;
         oTexture = oMaterial.getColorMap();
         if (!oTexture) continue;
-        oMaterial.setColorMap(texture);
+        var oProp = oMat.findProperty('Diffuse Overlay Weight');
+        if (oProp && bUseShader) {
+        	editTextureIray(oMaterial, sBasePath, sLayerPath, sMaskPath);
+        }
+        else {
+        	editTextureLIE(oMaterial, sBasePath, sLayerPath, sMaskPath);
+        }
     }
 }
 
-function hairBlending(base, layer, mask)
+function hairBlending(base, layer, mask, bUseShader)
 {
     // Define the absolute path of the layer images
     var oContentMgr = App.getContentMgr();
@@ -78,42 +137,16 @@ function hairBlending(base, layer, mask)
     var sMaskPath =  oContentMgr.getAbsolutePath( String("Runtime/Textures/%1").arg(mask), true );
 
     perror("Blending base: %1, layer: %2, mask: %3.".arg(base).arg(layer).arg(mask))
-    var oBaseSize = Image(sBasePath).size;
-    var oLayerSize = Image(sLayerPath).size;
-    var oMaskSize = Image(sMaskPath).size;
-    var nLayerScale = oBaseSize.width / oLayerSize.width;
-    var nMaskScale = oBaseSize.width / oMaskSize.width;
 
     // Create file info objects for easy path operations
     var oBaseFile = new DzFileInfo( sBasePath );
     var oLayerFile  = new DzFileInfo( sLayerPath );
     var oMaskFile = new DzFileInfo( sMaskPath );
 
-    // Define the names of the layers
-    var sBaseName = oBaseFile.baseName();
-    var sLayerName  = oLayerFile.baseName();
-    var sMaskName = String("%1 Mask").arg( oMaskFile.baseName() );
-
 
     if ( oBaseFile.exists() && oLayerFile.exists() && oMaskFile.exists() ) {
-        var oImageMgr = App.getImageMgr();
-        var textureName = oImageMgr.getUniqueImageName("OOT Hair Blending");
-        var oNewLayeredTexture = oImageMgr.createLayeredTexture(textureName);
-        oNewLayeredTexture.size = oBaseSize;
-        var oLayer0 = oNewLayeredTexture.createLayer( sBaseName );
-        var oLayer1 = oNewLayeredTexture.createLayer( sLayerName );
-        var oMask = oLayer1.createMask( sMaskName );
-        
-        // Set the absolute path of the image for the layer
-        oLayer0.imageFile = sBasePath; 
-        oLayer1.imageFile = sLayerPath; 
-        oLayer1.xScale = nLayerScale;
-        oLayer1.yScale = nLayerScale;
-        
-        oMask.imageFile = sMaskPath;
-        oMask.xScale = nMaskScale;
-        oMask.yScale = nMaskScale;
-        editTexture(oNewLayeredTexture);
+	    // Define the names of the layers
+        editTexture(sBasePath, sLayerPath, sMaskPath, bUseShader);
     }
     else {
         if (! oBaseFile.exists() ) {
@@ -140,6 +173,16 @@ function saveSetting( key, keyVal )
 function getSetting( key, defVal )
 {
     return DzAppSettings(g_programName).getStringValue( key, defVal );
+}
+
+function saveBoolSetting( key, keyVal )
+{
+    DzAppSettings(g_programName).setBoolValue( key, keyVal );
+}
+
+function getBoolSetting( key, defVal )
+{
+    return DzAppSettings(g_programName).getBoolValue( key, defVal );
 }
 
 function dumpBehavior(obj) {
@@ -230,7 +273,7 @@ function main() {
     });
 
     var wDlgBtnsGB = new DzVGroupBox(gb);
-    wDlgBtnsGB.columns = 2;
+    wDlgBtnsGB.columns = 3;
 
     var wAcceptBtn = new DzPushButton( wDlgBtnsGB );
     wAcceptBtn.text = qsTr("Do it");
@@ -240,14 +283,22 @@ function main() {
     wCancelBtn.text = qsTr("Exit");
     wDlg.setRejectButton( wCancelBtn );
 
+	var wIrayChk = new DzCheckBox(wDlgBtnsGB);
+	wIrayChk.text = "Use Shader";
+    wIrayChk.checked = getBoolSetting("UseShader", true);
+    connect(wIrayChk, "toggled(bool)", function(b) {
+    	saveBoolSetting("UseShader", b);
+    });
+    
     wDlg.width = 840;
     wDlg.height = 550;
     var r = wDlg.exec();
     if (r) {
-        var sTrimBase = trimFileName(g_HairIconFolder, aTextureFiles[getSetting("Base", 0)])
-        var sTrimLayer = trimFileName(g_HairIconFolder, aTextureFiles[getSetting("Layer", 0)])
-        var sTrimMask = trimFileName(g_AlphaIconFolder, aMaskFiles[getSetting("Mask", 0)])
-        hairBlending(sTrimBase, sTrimLayer, sTrimMask);
+        var sTrimBase = trimFileName(g_HairIconFolder, aTextureFiles[getSetting("Base", 0)]);
+        var sTrimLayer = trimFileName(g_HairIconFolder, aTextureFiles[getSetting("Layer", 0)]);
+        var sTrimMask = trimFileName(g_AlphaIconFolder, aMaskFiles[getSetting("Mask", 0)]);
+        var bUseShader = getBoolSetting("UseShader", true);
+        hairBlending(sTrimBase, sTrimLayer, sTrimMask, bUseShader);
     }
 }
 
